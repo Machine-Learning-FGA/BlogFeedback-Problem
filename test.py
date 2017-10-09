@@ -1,53 +1,58 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt 
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.linear_model import Lasso, Ridge
+import matplotlib.pyplot as plt
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.model_selection import cross_val_score
+from sklearn.feature_selection import VarianceThreshold, SelectFromModel
+from sklearn.ensemble import ExtraTreesClassifier
 from termcolor import cprint
-from sklearn.feature_selection import RFECV
+from sklearn.externals import joblib
 
 
-print('Lendo dados', end='')
-#carregando dados
+print('Lendo dados para Treinamento')
+data_train = pd.read_csv('blog_dataset/train.csv', header=None)
+x_train = np.array(data_train.iloc[0:20000, 0:280])
+y_train = np.array(data_train.iloc[0:20000, -1])
+cprint('Dados lidos com sucesso!', 'green')
 
-data = pd.read_csv('blogdata/train.csv')
+print('Criando dados para Teste')
+data_test = pd.read_csv('blog_dataset/test.csv', header=None)
+x_test = np.array(data_test.iloc[:, 0:280])
+y_test = np.array(data_test.iloc[:, -1])
+cprint('Dados para teste criados com sucesso!', 'green')
 
-print(data)
+vt = VarianceThreshold(threshold=(.80 * (1 - .80)))
+x_train_vt = vt.fit_transform(x_train, y_train)
+x_test_vt = vt.fit_transform(x_test, y_test)
+print(x_train.shape)
+print(x_train_vt.shape)
 
-x_train = np.array(data.iloc[0:10000, 0:1])
-y_train = np.array(data.iloc[0:10000,-1])
+'''
+clf = ExtraTreesClassifier()
+train_clf = clf.fit(x_train,y_train)
+test_clf = clf.fit(x_test,y_test)
+train_clf.feature_importances_
+test_clf.feature_importances_
 
-cprint(' Done', 'green')
+model_train = SelectFromModel(train_clf, prefit=True)
+model_test = SelectFromModel(test_clf, prefit=True)
 
-
-print('Criando dados de test', end='')
-#dados de test
-
-data_test = pd.read_csv('blogdata/test1.csv')
-
-x_test = np.array(data_test.iloc[:, 0:1])
-y_test = np.array(data_test.iloc[:,-1])
-
-
-cprint(' Done', 'green')
-
-
-#Iniciando modelo
-print('Iniciando modelo', end='')
-
-#model = Lasso(fit_intercept=True, normalize=True)
-model = Ridge()
-cprint(' Done', 'green')
-
-#treinando modelo
-
-print('Treinando modelo', end='')
+x_train_clf = model_train.transform(x_train)
+x_test_clf = model_test.transform(x_test)
+print(x_train.shape)
+print(x_train_clf.shape)
+'''
 
 
-rfe = RFECV(model)
-x_train = rfe.fit_transform(x_train,y_train)
+print('Treinando Modelo')
+regr = DecisionTreeRegressor()
 
-model.fit(x_train,y_train)
+regr.fit(x_train_vt,y_train)
 
-print(cross_val_score(model,x_test,y_test))
-cprint(' Done', 'green')
+print("Obtendo Resultados")
+y = np.array(y_test)
+x = np.array(x_test)
+
+print(cross_val_score(regr, x_test_vt, y_test, scoring='explained_variance'))
+
+joblib.dump(regr, 'decisionTreeRegressor.pkl')
