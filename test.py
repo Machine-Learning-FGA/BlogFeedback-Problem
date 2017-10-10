@@ -46,6 +46,6 @@ regr = DecisionTreeRegressor()
 regr.fit(x_train_vt,y_train)
 
 print("Obtendo Resultados")
-print(cross_val_score(regr, x_test_vt, y_test, scoring='explained_variance'))
+print(cross_val_score(regr, x_test_vt, y_test, scoring='r2'))
 
 joblib.dump(regr, 'decisionTreeRegressor.sav')
