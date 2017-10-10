@@ -24,6 +24,7 @@ vt = VarianceThreshold(threshold=(.80 * (1 - .80)))
 x_train_vt = vt.fit_transform(x_train, y_train)
 x_test_vt = vt.fit_transform(x_test, y_test)
 
+print(vt.get_support(indices=True))
 '''
 clf = ExtraTreesClassifier()
 train_clf = clf.fit(x_train,y_train)
